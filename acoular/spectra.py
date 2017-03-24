@@ -301,12 +301,16 @@ class EigSpectra( PowerSpectra ):
         name_eva = 'eva_' + self.digest
         name_eve = 'eve_' + self.digest
         csm = self.csm #trigger calculation
-        if (not name_eva in self.h5f.root) or (not name_eve in self.h5f.root):
+        if (not name_eva in self.h5f.root) or (not name_eve in self.h5f.root) or (not self.cached):
             csm_shape = self.csm.shape
             eva = empty(csm_shape[0:2], float32)
             eve = empty(csm_shape, complex64)
             for i in range(csm_shape[0]):
                 (eva[i], eve[i])=linalg.eigh(self.csm[i])
+                
+            if (not self.cached):
+                 return (eva,eve)
+             
             atom_eva = tables.Float32Atom()
             atom_eve = tables.ComplexAtom(8)
             filters = tables.Filters(complevel=5, complib='blosc')
@@ -316,6 +320,7 @@ class EigSpectra( PowerSpectra ):
                 eve.shape, filters=filters)
             ac_eva[:] = eva
             ac_eve[:] = eve
+           
         return (self.h5f.get_node('/', name_eva), \
                     self.h5f.get_node('/', name_eve))
             
